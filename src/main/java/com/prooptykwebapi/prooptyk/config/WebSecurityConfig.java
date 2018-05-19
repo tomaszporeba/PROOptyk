@@ -2,6 +2,7 @@ package com.prooptykwebapi.prooptyk.config;
 
 import com.prooptykwebapi.prooptyk.security.JWTAuthenticationFilter;
 import com.prooptykwebapi.prooptyk.security.JWTAuthorizationFilter;
+import com.prooptykwebapi.prooptyk.security.JWTTokenClaims;
 import com.prooptykwebapi.prooptyk.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +27,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private UserDetailsServiceImpl userDetailsServiceImpl;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+    @Autowired
+    JWTTokenClaims jwtTokenClaims;
 
     public WebSecurityConfig(UserDetailsServiceImpl userDetailsServiceImpl, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userDetailsServiceImpl = userDetailsServiceImpl;
@@ -44,7 +47,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .anyRequest().authenticated()
                     .and()
                     .addFilter(new JWTAuthenticationFilter(authenticationManager()))
-                    .addFilter(new JWTAuthorizationFilter(authenticationManager()))
+                    .addFilter(new JWTAuthorizationFilter(authenticationManager(), jwtTokenClaims))
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 //                    .antMatchers("/css/**", "/index", "/home", "/user/**").permitAll()
 //                    .antMatchers("/admin/**").hasAnyRole("ADMIN")
@@ -69,6 +72,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         source.registerCorsConfiguration("/**", new CorsConfiguration().applyPermitDefaultValues());
         return source;
     }
+
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {

@@ -16,7 +16,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 
 import static com.prooptykwebapi.prooptyk.security.SecurityConstants.HEADER_STRING;
@@ -51,17 +54,32 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request, HttpServletResponse response) {
-        String token = request.getHeader(HEADER_STRING);
-//        Date expirationDate = jwtTokenClaims.getExpirationDateFromToken(token);
+
+        String token = null;
+        try {
+            token = request.getHeader(HEADER_STRING);
+        } catch (Exception e) {}
 
         String username;
+        Claims claims;
 
         if (token !=null) {
-            username = jwtTokenClaims.getUsernameFromToken(token);
+            claims  = jwtTokenClaims.getClaimsFromToken(token);
+            username = jwtTokenClaims.getUsernameFromClaims(claims);
+            boolean tokenValidate = jwtTokenClaims.tokenValidate(claims);
+
+            if (tokenValidate) {
                 if (username != null) {
                     return new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
-                }
-                return null;
+                } return null;
+            } else {
+                token = jwtTokenClaims.regenerateToken(username, claims);
+                if (token != null) {
+                    response.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
+                    return new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
+                } return null;
+
+            }
 
         }
         return null;

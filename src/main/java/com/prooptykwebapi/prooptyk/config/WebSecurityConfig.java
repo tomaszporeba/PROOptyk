@@ -1,5 +1,6 @@
 package com.prooptykwebapi.prooptyk.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.prooptykwebapi.prooptyk.security.JWTAuthenticationFilter;
 import com.prooptykwebapi.prooptyk.security.JWTAuthorizationFilter;
 import com.prooptykwebapi.prooptyk.security.JWTTokenClaims;
@@ -26,6 +27,7 @@ import static com.prooptykwebapi.prooptyk.security.SecurityConstants.SIGN_UP_URL
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private UserDetailsServiceImpl userDetailsServiceImpl;
+    private ObjectMapper objectMapper = new ObjectMapper();
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     @Autowired
     JWTTokenClaims jwtTokenClaims;
@@ -46,7 +48,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //                    .antMatchers(HttpMethod.POST, SIGN_UP_URL).permitAll()
                     .anyRequest().authenticated()
                     .and()
-                    .addFilter(new JWTAuthenticationFilter(authenticationManager()))
+                    .addFilter(new JWTAuthenticationFilter(authenticationManager(), jwtTokenClaims, objectMapper))
                     .addFilter(new JWTAuthorizationFilter(authenticationManager(), jwtTokenClaims))
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 //                    .antMatchers("/css/**", "/index", "/home", "/user/**").permitAll()

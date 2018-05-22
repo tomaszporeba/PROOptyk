@@ -2,6 +2,7 @@ package com.prooptykwebapi.prooptyk.model;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Set;
 
 @Entity
@@ -29,6 +30,17 @@ public class User implements Serializable {
     private String matchingPassword;
 
     private String email;
+
+    public Date getLastPasswordChange() {
+        return lastPasswordChange;
+    }
+
+    public void setLastPasswordChange(Date lastPasswordChange) {
+        this.lastPasswordChange = lastPasswordChange;
+    }
+
+    @Column(name = "last_password_change")
+    private Date lastPasswordChange;
 
 //    private Set<Role> roles;
 //

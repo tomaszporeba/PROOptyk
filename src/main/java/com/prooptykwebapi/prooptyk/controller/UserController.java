@@ -4,8 +4,10 @@ package com.prooptykwebapi.prooptyk.controller;
 import com.prooptykwebapi.prooptyk.model.User;
 import com.prooptykwebapi.prooptyk.repository.UserRepository;
 import com.prooptykwebapi.prooptyk.security.JWTAuthenticationFilter;
+import com.prooptykwebapi.prooptyk.service.JWTAuthenticationResponse;
 import com.prooptykwebapi.prooptyk.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -17,6 +19,8 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import javax.xml.ws.Response;
+import java.util.Date;
 
 @RestController
 public class UserController {
@@ -56,26 +60,13 @@ public class UserController {
     @RequestMapping("/users/sign-up")
     public void signUp(@RequestBody User user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        user.setLastPasswordChange(new Date(System.currentTimeMillis()));
         userService.save(user);
     }
 
     @RequestMapping("/login")
-    public void login(HttpServletRequest request, HttpServletResponse response){
+    public void login(HttpServletRequest request, HttpServletResponse response) {
         jwtAuthenticationFilter.attemptAuthentication(request, response);
+
     }
-
-//    @RequestMapping(value = "user/registration", method = RequestMethod.POST)
-//    public String registration(@ModelAttribute("user") User user, BindingResult bindingResult, Model model, WebRequest request) {
-//
-//        userService.save(user);
-//        return "home";
-//    }
-
-//    @RequestMapping(value = "/user/registration", method = RequestMethod.POST)
-//    public void registerUserAccount
-//            (@ModelAttribute("user") @Valid User user,
-//             BindingResult result, WebRequest request, Errors errors) {
-//        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-//        userRepository.save(user);
-//    }
 }

@@ -1,9 +1,14 @@
 package com.prooptykwebapi.prooptyk.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.JSONPObject;
+import com.prooptykwebapi.prooptyk.model.JwtResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,15 +22,21 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.prooptykwebapi.prooptyk.security.SecurityConstants.*;
 
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private AuthenticationManager authenticationManager;
+    private JWTTokenClaims jwtTokenClaims;
+    private ObjectMapper objectMapper;
 
-    public JWTAuthenticationFilter(AuthenticationManager authenticationManager) {
-        this.authenticationManager=authenticationManager;
+    public JWTAuthenticationFilter(AuthenticationManager authenticationManager, JWTTokenClaims jwtTokenClaims, ObjectMapper objectMapper) {
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenClaims = jwtTokenClaims;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -47,14 +58,20 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
-        Date expiration = new Date((System.currentTimeMillis() + EXPIRATION_TIME));
-            String token = Jwts.builder()
-                    .setSubject(((User) authentication.getPrincipal()).getUsername())
-                    .setExpiration(expiration)
-                    .signWith(SignatureAlgorithm.HS512, SECRET.getBytes())
-                    .compact();
 
-            response.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
+        JwtResponse jwtResponse = this.jwtTokenClaims.generateToken(authentication);
+
+        String token = jwtResponse.getAccess_token();
+        response.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
+
+        response.setStatus(HttpStatus.OK.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+        try {
+            objectMapper.writeValue(response.getWriter(), jwtResponse);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
     }
